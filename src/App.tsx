@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTodos } from '@/hooks';
-import { AddTodo, TodoList, TodoFilters, ErrorAlert } from '@/components';
+import { AddTodo, TodoList, TodoFilters, ErrorAlert, SearchTodos } from '@/components';
 import { Box, Flex, Heading, Text } from '@/styles';
 import { theme } from '@/styles';
 
@@ -9,6 +9,7 @@ const App: React.FC = () => {
     todos,
     allTodos,
     filter,
+    searchQuery,
     loading,
     error,
     stats,
@@ -17,8 +18,13 @@ const App: React.FC = () => {
     deleteTodo,
     updateTodo,
     setFilter,
+    setSearchQuery,
     clearCompleted
   } = useTodos();
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
 
   return (
     <Box
@@ -62,6 +68,14 @@ const App: React.FC = () => {
         {/* Error Alert */}
         <ErrorAlert error={error} />
 
+        {/* Search Todos */}
+        <SearchTodos
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClearSearch={handleClearSearch}
+          resultsCount={todos.length}
+        />
+
         {/* Add Todo Form */}
         <AddTodo
           onAdd={addTodo}
@@ -102,6 +116,7 @@ const App: React.FC = () => {
         >
           <Text $size="sm" $color={theme.colors.gray[500]}>
             Total: {stats.total} todos | Completed: {stats.completed} | Active: {stats.active}
+            {searchQuery && ` | Search: "${searchQuery}"`}
           </Text>
         </Box>
       </Flex>
