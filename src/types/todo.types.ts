@@ -23,6 +23,7 @@ export interface TodoState {
   todos: Todo[];
   allTodos: Todo[];
   filter: TodoFilter;
+  searchQuery: string;
   loading: boolean;
   error: string | null;
   stats: TodoStats;
@@ -34,5 +35,6 @@ export interface TodoActions {
   deleteTodo: (id: string) => void;
   updateTodo: (id: string, text: string) => void;
   setFilter: (filter: TodoFilter) => void;
+  setSearchQuery: (query: string) => void;
   clearCompleted: () => void;
 }
