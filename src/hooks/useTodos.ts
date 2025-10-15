@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Todo, TodoFilter, TodoState, TodoActions } from '@/types';
+import { Todo, TodoFilter, TodoState, TodoActions, TodoPriority } from '@/types';
 
 const STORAGE_KEY = 'react-todo-context7-todos';
 
@@ -15,6 +15,7 @@ const loadTodosFromStorage = (): Todo[] => {
       const parsed = JSON.parse(stored);
       return parsed.map((todo: any) => ({
         ...todo,
+        priority: todo.priority || 'medium', // Default priority for existing todos
         createdAt: new Date(todo.createdAt),
         updatedAt: new Date(todo.updatedAt)
       }));
@@ -71,7 +72,7 @@ export const useTodos = (): TodoState & TodoActions => {
   }, [todos, filter]);
 
   // Action handlers - OPTIMIZED with useCallback
-  const addTodo = useCallback((text: string) => {
+  const addTodo = useCallback((text: string, priority: TodoPriority = 'medium') => {
     if (!text.trim()) {
       setError('Todo text cannot be empty');
       return;
@@ -81,6 +82,7 @@ export const useTodos = (): TodoState & TodoActions => {
       id: generateId(),
       text: text.trim(),
       completed: false,
+      priority,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -103,7 +105,7 @@ export const useTodos = (): TodoState & TodoActions => {
     setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
   }, []);
 
-  const updateTodo = useCallback((id: string, text: string) => {
+  const updateTodo = useCallback((id: string, text: string, priority?: TodoPriority) => {
     if (!text.trim()) {
       setError('Todo text cannot be empty');
       return;
@@ -112,7 +114,12 @@ export const useTodos = (): TodoState & TodoActions => {
     setTodos(prevTodos =>
       prevTodos.map(todo =>
         todo.id === id
-          ? { ...todo, text: text.trim(), updatedAt: new Date() }
+          ? { 
+              ...todo, 
+              text: text.trim(), 
+              priority: priority || todo.priority,
+              updatedAt: new Date() 
+            }
           : todo
       )
     );
@@ -129,11 +136,22 @@ export const useTodos = (): TodoState & TodoActions => {
     const completed = todos.filter(todo => todo.completed).length;
     const active = total - completed;
     
+    const priorityCounts = todos.reduce((acc, todo) => {
+      acc[todo.priority]++;
+      return acc;
+    }, {
+      low: 0,
+      medium: 0,
+      high: 0,
+      urgent: 0
+    });
+    
     return {
       total,
       completed,
       active,
       hasCompleted: completed > 0,
+      priorityCounts
     };
   }, [todos]);
 
