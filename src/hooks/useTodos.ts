@@ -36,6 +36,7 @@ const saveTodosToStorage = (todos: Todo[]): void => {
 export const useTodos = (): TodoState & TodoActions => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filter, setFilter] = useState<TodoFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,17 +59,28 @@ export const useTodos = (): TodoState & TodoActions => {
     }
   }, [todos, loading]);
 
-  // Filter todos based on current filter - OPTIMIZED with useMemo
+  // Filter todos based on current filter and search query - OPTIMIZED with useMemo
   const filteredTodos = useMemo(() => {
+    let filtered = todos;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(todo => 
+        todo.text.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply status filter
     switch (filter) {
       case 'active':
-        return todos.filter(todo => !todo.completed);
+        return filtered.filter(todo => !todo.completed);
       case 'completed':
-        return todos.filter(todo => todo.completed);
+        return filtered.filter(todo => todo.completed);
       default:
-        return todos;
+        return filtered;
     }
-  }, [todos, filter]);
+  }, [todos, filter, searchQuery]);
 
   // Action handlers - OPTIMIZED with useCallback
   const addTodo = useCallback((text: string) => {
@@ -149,6 +161,7 @@ export const useTodos = (): TodoState & TodoActions => {
     todos: filteredTodos,
     allTodos: todos,
     filter,
+    searchQuery,
     loading,
     error,
     stats,
@@ -157,6 +170,7 @@ export const useTodos = (): TodoState & TodoActions => {
     deleteTodo,
     updateTodo,
     setFilter,
+    setSearchQuery,
     clearCompleted
   };
 };
