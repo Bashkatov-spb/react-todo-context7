@@ -1,9 +1,11 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Box, Flex, Input, Button, Text } from '../styles';
 import { theme } from '../styles';
+import { PrioritySelector } from './PrioritySelector';
+import { TodoPriority } from '../types';
 
 interface AddTodoProps {
-  onAdd: (text: string) => void;
+  onAdd: (text: string, priority?: TodoPriority) => void;
   loading?: boolean;
   error?: string | null;
 }
@@ -14,15 +16,17 @@ export const AddTodo: React.FC<AddTodoProps> = ({
   error
 }) => {
   const [text, setText] = useState('');
+  const [priority, setPriority] = useState<TodoPriority>('medium');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim() && !loading) {
-      onAdd(text.trim());
+      onAdd(text.trim(), priority);
       setText('');
+      setPriority('medium');
     }
-  }, [text, onAdd, loading]);
+  }, [text, priority, onAdd, loading]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -47,43 +51,54 @@ export const AddTodo: React.FC<AddTodoProps> = ({
       $margin={`0 0 ${theme.spacing.lg} 0`}
     >
       <form onSubmit={handleSubmit}>
-        <Flex $gap={theme.spacing.md} $align="center">
-          <Input
-            ref={inputRef}
-            type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="What needs to be done?"
-            $fullWidth
-            $size="lg"
-            $error={!!error}
-            disabled={loading}
-            aria-label="Add new todo"
-            aria-describedby={error ? 'todo-error' : undefined}
+        <Flex $direction="column" $gap={theme.spacing.md}>
+          {/* Text Input */}
+          <Flex $gap={theme.spacing.md} $align="center">
+            <Input
+              ref={inputRef}
+              type="text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="What needs to be done?"
+              $fullWidth
+              $size="lg"
+              $error={!!error}
+              disabled={loading}
+              aria-label="Add new todo"
+              aria-describedby={error ? 'todo-error' : undefined}
+            />
+            <Button
+              type="submit"
+              $variant="primary"
+              $size="lg"
+              $disabled={!text.trim() || loading}
+              aria-label="Add todo"
+            >
+              {loading ? 'Adding...' : 'Add Todo'}
+            </Button>
+          </Flex>
+          
+          {/* Priority Selector */}
+          <PrioritySelector
+            selectedPriority={priority}
+            onPriorityChange={setPriority}
+            size="md"
+            showLabels={true}
           />
-          <Button
-            type="submit"
-            $variant="primary"
-            $size="lg"
-            $disabled={!text.trim() || loading}
-            aria-label="Add todo"
-          >
-            {loading ? 'Adding...' : 'Add Todo'}
-          </Button>
+          
+          {/* Error Message */}
+          {error && (
+            <Text
+              id="todo-error"
+              $size="sm"
+              $color={theme.colors.error}
+              $align="left"
+            >
+              {error}
+            </Text>
+          )}
         </Flex>
-        
-        {error && (
-          <Text
-            id="todo-error"
-            $size="sm"
-            $color={theme.colors.error}
-            $align="left"
-            style={{ marginTop: theme.spacing.sm }}
-          >
-            {error}
-          </Text>
-        )}
       </form>
     </Box>
   );
